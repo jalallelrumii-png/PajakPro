@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pajak Pro | Auditor AI Indonesia</title>
+    <title>Pajak Pro | Ultimate Auditor AI</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -11,59 +11,63 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
+        :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; --danger: #ff3b30; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 450px; padding-bottom: 40px; }
+        .app-container { width: 100%; max-width: 450px; padding-bottom: 50px; }
         .screen { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.03); }
-        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
+        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin: 0; color: #000; }
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
         input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; background: #fafafa; transition: 0.2s; }
-        input:focus { border-color: var(--ios-blue); background: #fff; }
+        input:focus { border-color: var(--ios-blue); background: #fff; box-shadow: 0 0 0 4px rgba(0,113,227,0.1); }
         button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.97); }
-        .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
+        button:active { transform: scale(0.96); opacity: 0.8; }
+        .btn-logout { background: var(--danger); width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
         .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 8px; }
-        .search-container { margin-bottom: 15px; position: sticky; top: 10px; z-index: 10; }
+        
+        /* Accordion & Search */
+        .search-input { background: #e5e5ea; border: none; padding: 12px 20px; border-radius: 12px; margin-bottom: 15px; font-size: 15px; }
         .history-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .history-content { display: none; padding-top: 15px; border-top: 1px solid #f2f2f7; margin-top: 15px; animation: fadeIn 0.3s ease; }
+        .history-content { display: none; padding-top: 20px; border-top: 1px solid #f2f2f7; margin-top: 15px; animation: fadeIn 0.3s ease; }
         .history-item.active .history-content { display: block; }
         .history-item.active .arrow { transform: rotate(180deg); }
         .arrow { transition: 0.3s; font-size: 12px; color: #8e8e93; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; white-space: pre-wrap; }
-        .btn-delete { background: none; color: #ff3b30; width: auto; padding: 8px; font-size: 13px; font-weight: 500; }
-        #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:999; }
-        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin-bottom: 10px; }
+        .analysis { font-size: 14px; color: #1c1c1e; line-height: 1.6; background: #f2f2f7; padding: 18px; border-radius: 16px; white-space: pre-wrap; font-family: inherit; }
+        .btn-delete { background: none; color: var(--danger); width: auto; padding: 8px; font-size: 13px; font-weight: 600; }
+        
+        #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); z-index:999; }
+        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 700; margin: 10px 0; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <div id="modalSettings">
-    <div style="max-width:350px; margin:100px auto; background:white; padding:30px; border-radius:25px; text-align:center;">
-        <h3 style="margin-top:0;">⚙️ Config Groq AI</h3>
-        <p style="font-size:12px; color:#666;">Gunakan API Key Groq Anda (gsk_...)</p>
+    <div style="max-width:350px; margin:150px auto; background:white; padding:30px; border-radius:28px; text-align:center;">
+        <h2 style="margin-top:0;">⚙️ Config AI</h2>
+        <p style="font-size:13px; color:#666; margin-bottom:20px;">Masukkan Groq API Key (gsk_...) untuk mengaktifkan Auditor AI.</p>
         <input type="password" id="u_key" placeholder="gsk_xxxx...">
-        <button onclick="saveKey()">Simpan Konfigurasi</button>
-        <button onclick="toggleSettings()" style="background:none; color:#8e8e93; margin-top:10px; font-size:14px;">Tutup</button>
+        <button onclick="saveKey()">Simpan Key</button>
+        <button onclick="toggleSettings()" style="background:none; color:#8e8e93; margin-top:15px; font-size:14px; font-weight:600;">Kembali</button>
     </div>
 </div>
 
 <div class="app-container">
     <div id="authScreen" class="screen">
-        <h1>Pajak Pro.</h1>
-        <div class="card" style="margin-top:20px;">
-            <label>Email Address</label>
+        <h1 style="margin-bottom:10px;">Pajak Pro.</h1>
+        <p style="color:#8e8e93; margin-bottom:30px; font-weight:500;">Smart Auditor in your pocket.</p>
+        <div class="card">
+            <label>Email</label>
             <input type="email" id="email" placeholder="nama@email.com">
             <label>Password</label>
             <input type="password" id="pw" placeholder="••••••••">
-            <button onclick="handleAuth()">Masuk / Daftar</button>
+            <button onclick="handleAuth()">Sign In / Sign Up</button>
         </div>
     </div>
 
     <div id="mainScreen" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
             <h1>Pajak Pro.</h1>
             <div>
                 <button class="btn-settings" onclick="toggleSettings()">⚙️</button>
@@ -71,20 +75,19 @@
             </div>
         </div>
 
-        <div class="card"><canvas id="taxChart" height="180"></canvas></div>
+        <div class="card" style="padding:15px;"><canvas id="taxChart" height="180"></canvas></div>
 
         <div class="card">
-            <label>Data Transaksi</label>
-            <input type="text" id="brand" placeholder="Nama Proyek / Brand">
-            <input type="number" id="nominal" placeholder="Nominal Pendapatan (Rp)">
-            <div id="loading">✨ Sedang Menghitung Pajak Indonesia...</div>
-            <button id="btnSubmit" onclick="prosesData()">Analisa Pajak (UU HPP)</button>
+            <label>Detail Objek Pajak</label>
+            <input type="text" id="brand" placeholder="Ex: Honda Vario atau Proyek IT">
+            <label>Nilai / Harga OTR (Rp)</label>
+            <input type="number" id="nominal" placeholder="Contoh: 25000000">
+            <div id="loading">⚡ AI SEDANG MENGANALISA...</div>
+            <button id="btnSubmit" onclick="prosesData()">Hitung Pajak Sekarang</button>
         </div>
 
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="🔍 Cari riwayat laporan..." onkeyup="filterHistory()">
-        </div>
-
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Cari Proyek atau Kendaraan..." onkeyup="filterHistory()">
+        
         <div id="historyList"></div>
     </div>
 </div>
@@ -106,6 +109,7 @@
 
     async function handleAuth() {
         const e = document.getElementById('email').value, p = document.getElementById('pw').value;
+        if(!e || !p) return alert('Isi email/pw, anjing!');
         try { await account.createEmailSession(e, p); location.reload(); }
         catch (err) {
             try { await account.create('unique()', e, p); await account.createEmailSession(e, p); location.reload(); }
@@ -115,7 +119,7 @@
 
     async function logout() { await account.deleteSession('current'); location.reload(); }
     function toggleSettings() { const m = document.getElementById('modalSettings'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-    function saveKey() { const val = document.getElementById('u_key').value; if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Berhasil!'); } else { alert('Key Salah!'); } }
+    function saveKey() { const val = document.getElementById('u_key').value; if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Konfigurasi Disimpan!'); } else { alert('Key Groq Tidak Valid!'); } }
 
     async function loadData() {
         try {
@@ -134,30 +138,31 @@
             type: 'bar',
             data: {
                 labels: docs.slice(-5).map(d => d.nama_brand),
-                datasets: [{ label: 'Omzet', data: docs.slice(-5).map(d => d.nominal), backgroundColor: '#0071e3', borderRadius: 8 }]
+                datasets: [{ label: 'Nilai', data: docs.slice(-5).map(d => d.nominal), backgroundColor: '#0071e3', borderRadius: 10 }]
             },
-            options: { plugins: { legend: { display: false } } }
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
         });
     }
 
     function renderHistory(docs) {
         const h = document.getElementById('historyList');
         h.innerHTML = '';
+        if(docs.length === 0) h.innerHTML = '<p style="text-align:center; color:#8e8e93;">Belum ada riwayat pajak.</p>';
         docs.forEach(d => {
             const div = document.createElement('div');
             div.className = 'history-item card';
             div.innerHTML = `
                 <div class="history-header" onclick="this.parentElement.classList.toggle('active')">
                     <div>
-                        <strong style="font-size:17px;">${d.nama_brand}</strong><br>
-                        <span style="color:#0071e3; font-weight:600;">Rp ${d.nominal.toLocaleString()}</span>
+                        <strong style="font-size:17px; letter-spacing:-0.5px;">${d.nama_brand}</strong><br>
+                        <span style="color:#0071e3; font-weight:700; font-size:14px;">Rp ${d.nominal.toLocaleString()}</span>
                     </div>
                     <span class="arrow">▼</span>
                 </div>
                 <div class="history-content">
                     <div class="analysis">${d.analisis_pajak}</div>
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button onclick="downloadPDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)" style="flex:1; background:#e5e5ea; color:#000; padding:10px; font-size:13px;">📄 PDF</button>
+                    <div style="display:flex; gap:12px; margin-top:20px;">
+                        <button onclick="downloadPDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)" style="flex:1; background:#000; padding:12px; font-size:13px;">📄 Unduh PDF</button>
                         <button class="btn-delete" onclick="hapusData('${d.$id}')">🗑️ Hapus</button>
                     </div>
                 </div>
@@ -173,16 +178,19 @@
     }
 
     async function hapusData(id) {
-        if(!confirm('Hapus data laporan ini?')) return;
+        if(!confirm('Hapus laporan ini selamanya?')) return;
         try { await db.deleteDocument('databaseutama', 'transaksi_klien', id); loadData(); } catch (e) { alert(e.message); }
     }
 
     async function prosesData() {
         const key = localStorage.getItem('u_gkey');
-        if(!key) { alert('Isi API Key di Settings ⚙️!'); return toggleSettings(); }
+        if(!key) { alert('Atur API Key dulu di ⚙️!'); return toggleSettings(); }
         const b = document.getElementById('brand').value, n = document.getElementById('nominal').value;
-        if(!b || !n) return;
+        if(!b || !n) return alert('Isi data objek dan nominal!');
+        
         document.getElementById('loading').style.display = 'block';
+        document.getElementById('btnSubmit').disabled = true;
+
         try {
             const user = await account.get();
             const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -191,10 +199,10 @@
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [
-                        {role: "system", content: "Anda adalah konsultan pajak senior Indonesia. Hitung pajak berdasarkan UU HPP. Jelaskan rincian PPh 21 (progresif) dan PPN 11% secara detail namun ringkas."},
-                        {role: "user", content: `Hitung pajak proyek ${b} dengan nilai Rp ${n}`}
+                        {role: "system", content: "Anda adalah pakar pajak Indonesia. ANALISA INPUT USER: Jika berupa kendaraan (motor/mobil), hitung estimasi PKB, SWDKLLJ, dan biaya STNK (plat baru/perpanjang) berdasarkan harga OTR. Jika berupa bisnis/proyek, hitung PPh 21, PPh 23, atau PPN 11% sesuai UU HPP. Berikan rincian angka yang jelas dalam format poin-poin profesional."},
+                        {role: "user", content: `Objek: ${b}, Nilai: Rp ${n}`}
                     ],
-                    temperature: 0.2
+                    temperature: 0.1
                 })
             });
             const res = await ai.json();
@@ -204,17 +212,24 @@
             });
             document.getElementById('brand').value = ''; document.getElementById('nominal').value = '';
             loadData();
-        } catch (e) { alert('Error!'); }
-        finally { document.getElementById('loading').style.display = 'none'; }
+        } catch (e) { alert('Gagal menganalisa. Cek Key Groq lo!'); }
+        finally { 
+            document.getElementById('loading').style.display = 'none'; 
+            document.getElementById('btnSubmit').disabled = false;
+        }
     }
 
     function downloadPDF(b, n, t) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(18); doc.text(`PAJAK PRO REPORT: ${b}`, 10, 20);
-        doc.setFontSize(12); doc.text(`Total Omzet: Rp ${n.toLocaleString()}`, 10, 30);
-        doc.text(doc.splitTextToSize(t, 180), 10, 50);
-        doc.save(`Laporan_${b}.pdf`);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(20); doc.text("PAJAK PRO - LAPORAN ANALISA", 10, 20);
+        doc.setFontSize(12); doc.text(`Objek: ${b}`, 10, 35);
+        doc.text(`Nilai Transaksi/OTR: Rp ${n.toLocaleString()}`, 10, 42);
+        doc.line(10, 48, 200, 48);
+        doc.setFont("helvetica", "normal");
+        const splitText = doc.splitTextToSize(t, 180);
+        doc.text(splitText, 10, 60);
+        doc.save(`Analisa_Pajak_${b}.pdf`);
     }
 
     init();
