@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Laporin AI | SaaS</title>
+    <title>Laporin AI | Vercel Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
         .app-container { width: 100%; max-width: 450px; }
         .screen { display: none; animation: fadeIn 0.4s ease; }
@@ -26,19 +26,18 @@
         .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
         .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 10px; }
         .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
         #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:999; }
+        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="modalSettings">
     <div style="max-width:350px; margin:100px auto; background:white; padding:30px; border-radius:25px;">
-        <h3>⚙️ Pengaturan API Groq</h3>
-        <label>Masukkan API Key Anda</label>
-        <input type="password" id="userKeyInput" placeholder="gsk_xxxx...">
+        <h3>⚙️ Groq API Key</h3>
+        <input type="password" id="u_key" placeholder="gsk_xxxx...">
         <button onclick="saveKey()">Simpan Key</button>
-        <button onclick="toggleSettings()" style="background:none; color:red; margin-top:10px; font-size:14px;">Batal</button>
+        <button onclick="toggleSettings()" style="background:none; color:red; margin-top:10px; font-size:14px;">Tutup</button>
     </div>
 </div>
 
@@ -66,7 +65,6 @@
             <input type="text" id="brand" placeholder="e.g. Honda">
             <label>Income (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
-            <div id="loading" style="display:none; text-align:center; color:var(--ios-blue); margin-bottom:10px;">✨ Analisis AI...</div>
             <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
         </div>
         <div id="historyList"></div>
@@ -93,22 +91,13 @@
         try { await account.createEmailSession(e, p); location.reload(); }
         catch (err) {
             try { await account.create('unique()', e, p); await account.createEmailSession(e, p); location.reload(); }
-            catch (x) { alert(x.message); }
+            catch (x) { alert("Error: " + x.message); }
         }
     }
 
     async function logout() { await account.deleteSession('current'); location.reload(); }
-
-    function toggleSettings() {
-        const m = document.getElementById('modalSettings');
-        m.style.display = m.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function saveKey() {
-        const val = document.getElementById('userKeyInput').value;
-        if(val.startsWith('gsk_')) { localStorage.setItem('user_gkey', val); toggleSettings(); alert('Key Tersimpan!'); }
-        else { alert('Key Groq salah!'); }
-    }
+    function toggleSettings() { const m = document.getElementById('modalSettings'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+    function saveKey() { const val = document.getElementById('u_key').value; if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Key Tersimpan!'); } else { alert('Key Groq Salah!'); } }
 
     async function loadData() {
         try {
@@ -138,15 +127,16 @@
             h.innerHTML += `<div class="history-item">
                 <strong>${d.nama_brand}</strong> - Rp ${d.nominal.toLocaleString()}
                 <div class="analysis">${d.analisis_pajak}</div>
+                <button onclick="downloadPDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)" style="width:auto; padding:5px; font-size:10px; margin-top:5px; background:#eee; color:#000;">📄 PDF</button>
             </div>`;
         });
     }
 
     async function prosesData() {
-        const gkey = localStorage.getItem('user_gkey');
-        if(!gkey) { alert('Isi API Key di Settings ⚙️!'); return toggleSettings(); }
+        const gkey = localStorage.getItem('u_gkey');
+        if(!gkey) { alert('Isi API Key dulu di setting!'); return toggleSettings(); }
         const b = document.getElementById('brand').value, n = document.getElementById('nominal').value;
-        document.getElementById('loading').style.display = 'block';
+        if(!b || !n) return;
         try {
             const user = await account.get();
             const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -154,7 +144,7 @@
                 headers: { 'Authorization': `Bearer ${gkey}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan rincian singkat."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
+                    messages: [{role: "system", content: "Expert pajak Indonesia. Ringkas."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
                 })
             });
             const data = await ai.json();
@@ -163,10 +153,17 @@
                 nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: user.$id
             });
             loadData();
-        } catch (e) { alert('Gagal! Cek API Key lo.'); }
-        finally { document.getElementById('loading').style.display = 'none'; }
+        } catch (e) { alert('Gagal! Cek Key lo.'); }
+    }
+
+    function downloadPDF(b, n, t) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text(`Laporan: ${b}\nNominal: Rp ${n.toLocaleString()}\n\nAnalisis:\n${t}`, 10, 20);
+        doc.save(`${b}.pdf`);
     }
     init();
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
