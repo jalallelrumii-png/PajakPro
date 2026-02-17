@@ -1,15 +1,9 @@
 {
   "short_name": "Laporin",
-  "name": "Laporin AI Tax Consultant",
+  "name": "Laporin AI Tax",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f5f7",
   "theme_color": "#0071e3",
-  "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/5968/5968350.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "icons": [{ "src": "https://cdn-icons-png.flaticon.com/512/5968/5968350.png", "sizes": "512x512", "type": "image/png" }]
 }
