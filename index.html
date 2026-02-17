@@ -3,56 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Laporin AI | SaaS Edition</title>
-    
+    <title>Laporin AI | SaaS</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968350.png">
-
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
         :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; overflow-x: hidden; }
-        .app-container { width: 100%; max-width: 450px; padding-bottom: 50px; }
-        .screen { display: none; animation: slideUp 0.4s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 450px; }
+        .screen { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
-        
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
         input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; }
-        
         button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.96); }
-        
+        button:active { transform: scale(0.97); }
         .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
-        .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 8px; }
-        
+        .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 10px; }
         .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
         .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
-        
         #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:999; }
-        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin: 15px 0; }
-        .pdf-btn { background: var(--ios-blue); color: #fff; padding: 8px 15px; font-size: 12px; border-radius: 8px; width: auto; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="modalSettings">
     <div style="max-width:350px; margin:100px auto; background:white; padding:30px; border-radius:25px;">
-        <h3>⚙️ User API Config</h3>
-        <p style="font-size:12px; color:#666;">Gunakan API Key Groq lo sendiri biar aplikasi ini gratis selamanya.</p>
-        <label>Groq API Key</label>
+        <h3>⚙️ Pengaturan API Groq</h3>
+        <label>Masukkan API Key Anda</label>
         <input type="password" id="userKeyInput" placeholder="gsk_xxxx...">
-        <button onclick="saveKey()">Simpan & Hubungkan</button>
-        <button onclick="toggleSettings()" style="background:none; color:red; margin-top:10px; font-size:14px;">Tutup</button>
+        <button onclick="saveKey()">Simpan Key</button>
+        <button onclick="toggleSettings()" style="background:none; color:red; margin-top:10px; font-size:14px;">Batal</button>
     </div>
 </div>
 
@@ -60,10 +46,8 @@
     <div id="authScreen" class="screen">
         <h1>Laporin.</h1>
         <div class="card">
-            <label>Email Access</label>
-            <input type="email" id="email" placeholder="email@contoh.com">
-            <label>Password</label>
-            <input type="password" id="pw" placeholder="Min. 8 Karakter">
+            <input type="email" id="email" placeholder="Email">
+            <input type="password" id="pw" placeholder="Password">
             <button onclick="handleAuth()">Sign In / Register</button>
         </div>
     </div>
@@ -76,21 +60,15 @@
                 <button class="btn-logout" onclick="logout()">Logout</button>
             </div>
         </div>
-
+        <div class="card"><canvas id="taxChart" height="180"></canvas></div>
         <div class="card">
-            <label>Visual Laporan Terakhir</label>
-            <canvas id="taxChart" height="200"></canvas>
-        </div>
-        
-        <div class="card">
-            <label>Nama Brand/Proyek</label>
-            <input type="text" id="brand" placeholder="e.g. Proyek A">
-            <label>Total Pendapatan (Rp)</label>
+            <label>Brand Reference</label>
+            <input type="text" id="brand" placeholder="e.g. Honda">
+            <label>Income (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
-            <div id="loading">✨ AI sedang menghitung...</div>
-            <button id="btnSubmit" onclick="prosesData()">Analisa & Simpan</button>
+            <div id="loading" style="display:none; text-align:center; color:var(--ios-blue); margin-bottom:10px;">✨ Analisis AI...</div>
+            <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
         </div>
-
         <div id="historyList"></div>
     </div>
 </div>
@@ -124,96 +102,71 @@
     function toggleSettings() {
         const m = document.getElementById('modalSettings');
         m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        const current = localStorage.getItem('u_gkey');
-        if(current) document.getElementById('userKeyInput').value = current;
     }
 
     function saveKey() {
         const val = document.getElementById('userKeyInput').value;
-        if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Key Tersimpan!'); }
-        else { alert('Key Groq tidak valid, anjing!'); }
+        if(val.startsWith('gsk_')) { localStorage.setItem('user_gkey', val); toggleSettings(); alert('Key Tersimpan!'); }
+        else { alert('Key Groq salah!'); }
     }
 
     async function loadData() {
         try {
             const user = await account.get();
-            const res = await db.listDocuments('databaseutama', 'transaksi_klien', [
-                Appwrite.Query.equal('user_id', user.$id),
-                Appwrite.Query.limit(50)
-            ]);
+            const res = await db.listDocuments('databaseutama', 'transaksi_klien', [Appwrite.Query.equal('user_id', user.$id)]);
             renderHistory(res.documents);
             updateChart(res.documents);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.log(e); }
     }
 
     function updateChart(docs) {
         const ctx = document.getElementById('taxChart').getContext('2d');
-        const labels = docs.slice(-5).map(d => d.nama_brand);
-        const data = docs.slice(-5).map(d => d.nominal);
         if (myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
-            data: { labels, datasets: [{ label: 'Income', data, backgroundColor: '#0071e3', borderRadius: 8 }] },
-            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } } } }
+            data: {
+                labels: docs.slice(-5).map(d => d.nama_brand),
+                datasets: [{ label: 'Income', data: docs.slice(-5).map(d => d.nominal), backgroundColor: '#0071e3', borderRadius: 8 }]
+            }
         });
     }
 
     function renderHistory(docs) {
         const h = document.getElementById('historyList');
-        h.innerHTML = '<h2>Riwayat</h2>';
+        h.innerHTML = '<h2>History</h2>';
         docs.reverse().forEach(d => {
             h.innerHTML += `<div class="history-item">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>${d.nama_brand}</strong>
-                    <span style="color:#0071e3">Rp ${d.nominal.toLocaleString()}</span>
-                </div>
-                <div class="analysis">${d.analisis_pajak.replace(/\n/g, '<br>')}</div>
-                <button class="pdf-btn" onclick="makePDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)">Unduh PDF</button>
+                <strong>${d.nama_brand}</strong> - Rp ${d.nominal.toLocaleString()}
+                <div class="analysis">${d.analisis_pajak}</div>
             </div>`;
         });
     }
 
     async function prosesData() {
-        const key = localStorage.getItem('u_gkey');
-        if(!key) { alert('Isi API Key di Settings dulu!'); return toggleSettings(); }
-        
+        const gkey = localStorage.getItem('user_gkey');
+        if(!gkey) { alert('Isi API Key di Settings ⚙️!'); return toggleSettings(); }
         const b = document.getElementById('brand').value, n = document.getElementById('nominal').value;
-        if(!b || !n) return;
-        
         document.getElementById('loading').style.display = 'block';
         try {
             const user = await account.get();
             const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${gkey}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
                     messages: [{role: "system", content: "Expert pajak Indonesia. Berikan rincian singkat."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
                 })
             });
-            const res = await ai.json();
-            const hasil = res.choices[0].message.content;
+            const data = await ai.json();
+            const hasil = data.choices[0].message.content;
             await db.createDocument('databaseutama', 'transaksi_klien', 'unique()', {
                 nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: user.$id
             });
             loadData();
-            document.getElementById('brand').value = ''; document.getElementById('nominal').value = '';
-        } catch (e) { alert('API Error! Cek Key lo.'); }
+        } catch (e) { alert('Gagal! Cek API Key lo.'); }
         finally { document.getElementById('loading').style.display = 'none'; }
     }
-
-    function makePDF(b, n, t) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.setFontSize(18); doc.text(`LAPORAN PAJAK: ${b}`, 10, 20);
-        doc.setFontSize(12); doc.text(`Nominal: Rp ${n.toLocaleString()}`, 10, 30);
-        doc.text("Analisis AI:", 10, 50);
-        doc.text(doc.splitTextToSize(t, 180), 10, 60);
-        doc.save(`Laporan_${b}.pdf`);
-    }
-
     init();
-    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
 </script>
 </body>
 </html>
