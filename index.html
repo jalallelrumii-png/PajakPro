@@ -2,32 +2,46 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Laporin AI | Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Laporin AI | Enterprise</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 400px; }
-        .screen { display: none; width: 100%; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        h1 { font-size: 38px; font-weight: 800; letter-spacing: -2px; margin-bottom: 25px; }
-        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.03); }
+        .app-container { width: 100%; max-width: 450px; }
+        .screen { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 20px; }
+        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; box-sizing: border-box; outline: none; background: #fafafa; }
+        input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; }
+        
         button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
         button:active { transform: scale(0.97); }
+        .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; margin-bottom: 20px; }
+        
         .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 12px; margin-top: 10px; }
-        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin: 10px 0; }
-        .pdf-btn { background: #e5e5ea; color: #000; padding: 10px; font-size: 12px; margin-top: 10px; width: auto; }
+        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
+        
+        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin-bottom: 10px; }
+        canvas { margin-bottom: 25px; }
+        .action-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-small { padding: 10px; font-size: 12px; border-radius: 10px; background: #e5e5ea; color: #000; width: auto; }
     </style>
 </head>
 <body>
+
 <div class="app-container">
     <div id="authScreen" class="screen">
         <h1>Laporin.</h1>
@@ -39,34 +53,45 @@
             <button onclick="handleAuth()">Sign In / Register</button>
         </div>
     </div>
+
     <div id="mainScreen" class="screen">
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Laporin.</h1>
-            <button onclick="logout()" style="width:auto; padding:8px 15px; font-size:12px; background:#ff3b30; border-radius:10px;">Logout</button>
+            <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
+
+        <div class="card">
+            <label>Tax Spending Overview</label>
+            <canvas id="taxChart"></canvas>
+        </div>
+        
         <div class="card">
             <label>Brand Reference</label>
             <input type="text" id="brand" placeholder="e.g. Honda">
-            <label>Income Amount (Rp)</label>
+            <label>Nominal Income (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
-            <button id="btnSubmit" onclick="prosesData()">Analyze with AI</button>
-            <div id="loading">AI is crunching...</div>
+            <div id="loading">✨ AI is Analyzing...</div>
+            <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
         </div>
+
         <div id="historyList"></div>
     </div>
 </div>
 
 <script>
+    // CONFIG
     const sdk = new Appwrite.Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('pajakpro');
     const account = new Appwrite.Account(sdk);
     const db = new Appwrite.Databases(sdk);
     const GROQ_KEY = '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';
+    
+    let myChart = null;
 
     async function init() {
         try {
             await account.get();
             showScreen('mainScreen');
-            loadHistory();
+            loadData();
         } catch (e) { showScreen('authScreen'); }
     }
 
@@ -76,74 +101,114 @@
     }
 
     async function handleAuth() {
-        const email = document.getElementById('email').value;
-        const pw = document.getElementById('pw').value;
+        const e = document.getElementById('email').value;
+        const p = document.getElementById('pw').value;
         try {
-            await account.createEmailSession(email, pw);
+            await account.createEmailSession(e, p);
             location.reload();
-        } catch (e) {
+        } catch (err) {
             try {
-                await account.create('unique()', email, pw);
-                await account.createEmailSession(email, pw);
+                await account.create('unique()', e, p);
+                await account.createEmailSession(e, p);
                 location.reload();
-            } catch (err) { alert("Error: " + err.message); }
+            } catch (x) { alert(x.message); }
         }
     }
 
     async function logout() { await account.deleteSession('current'); location.reload(); }
 
-    async function loadHistory() {
+    async function loadData() {
         try {
             const user = await account.get();
             const res = await db.listDocuments('databaseutama', 'transaksi_klien', [Appwrite.Query.equal('user_id', user.$id)]);
-            const list = document.getElementById('historyList');
-            list.innerHTML = '<h2>My Reports</h2>';
-            res.documents.reverse().forEach(doc => {
-                const cleanText = doc.analisis_pajak.replace(/\n/g, ' ');
-                list.innerHTML += `<div class="history-item">
-                    <strong>${doc.nama_brand}</strong><br>
-                    <span>Rp ${doc.nominal.toLocaleString('id-ID')}</span>
-                    <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
-                    <button class="pdf-btn" onclick="generatePDF('${doc.nama_brand}', '${doc.nominal}', \`${cleanText}\`)">Download PDF</button>
-                </div>`;
-            });
+            
+            updateChart(res.documents);
+            renderHistory(res.documents);
         } catch (e) { console.error(e); }
+    }
+
+    function renderHistory(docs) {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '<h2 style="font-size:20px; margin-left:10px;">Reports History</h2>';
+        docs.reverse().forEach(doc => {
+            list.innerHTML += `
+                <div class="history-item">
+                    <strong>${doc.nama_brand}</strong><br>
+                    <span style="color:var(--ios-blue); font-weight:700;">Rp ${doc.nominal.toLocaleString('id-ID')}</span>
+                    <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
+                    <div class="action-btns">
+                        <button class="btn-small" onclick="downloadPDF('${doc.nama_brand}', ${doc.nominal}, \`${doc.analisis_pajak.replace(/`/g, "'")}\`)">📄 PDF</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function updateChart(docs) {
+        const ctx = document.getElementById('taxChart').getContext('2d');
+        const labels = docs.map(d => d.nama_brand).slice(-5);
+        const values = docs.map(d => d.nominal).slice(-5);
+
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Income (Rp)',
+                    data: values,
+                    backgroundColor: '#0071e3',
+                    borderRadius: 8
+                }]
+            },
+            options: { plugins: { legend: { display: false } } }
+        });
     }
 
     async function prosesData() {
         const b = document.getElementById('brand').value;
         const n = document.getElementById('nominal').value;
-        if(!b || !n) return alert('Isi data!');
+        if(!b || !n) return alert('Isi data, anjing!');
+        
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('loading').style.display = 'block';
+
         try {
             const user = await account.get();
-            const aiReq = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{role: "system", content: "Expert pajak Indonesia 2026. Singkat."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
+                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan hitungan PPh singkat & saran pajak."}, {role: "user", content: `Analisa pajak ${b} income Rp${n}`}]
                 })
             });
-            const aiRes = await aiReq.json();
-            const hasil = aiRes.choices[0].message.content;
+            const res = await ai.json();
+            const hasil = res.choices[0].message.content;
+
             await db.createDocument('databaseutama', 'transaksi_klien', 'unique()', {
                 nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: user.$id
             });
-            loadHistory();
+            
+            document.getElementById('brand').value = '';
+            document.getElementById('nominal').value = '';
+            loadData();
         } catch (e) { alert(e.message); }
-        finally { document.getElementById('btnSubmit').disabled = false; document.getElementById('loading').style.display = 'none'; }
+        finally {
+            document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('loading').style.display = 'none';
+        }
     }
 
-    function generatePDF(brand, nominal, text) {
+    function downloadPDF(brand, nominal, text) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.text(`Laporan Pajak: ${brand}`, 10, 10);
-        doc.text(`Nominal: Rp ${parseInt(nominal).toLocaleString('id-ID')}`, 10, 20);
-        const splitText = doc.splitTextToSize(text, 180);
-        doc.text(splitText, 10, 30);
-        doc.save(`${brand}_pajak.pdf`);
+        doc.setFontSize(22); doc.text("TAX REPORT", 20, 20);
+        doc.setFontSize(12); doc.text(`Brand: ${brand}`, 20, 40);
+        doc.text(`Nominal: Rp ${nominal.toLocaleString('id-ID')}`, 20, 50);
+        doc.text("Analysis:", 20, 70);
+        const split = doc.splitTextToSize(text, 170);
+        doc.text(split, 20, 80);
+        doc.save(`Laporin_${brand}.pdf`);
     }
 
     init();
