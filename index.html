@@ -3,103 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Laporin AI</title>
+    <title>Laporin AI | Pro</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <style>
         :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .app { width: 100%; max-width: 400px; }
-        h1 { font-size: 34px; font-weight: 800; margin-bottom: 25px; letter-spacing: -1.5px; }
-        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 400px; }
+        .screen { display: none; width: 100%; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        h1 { font-size: 38px; font-weight: 800; letter-spacing: -2px; margin-bottom: 25px; }
+        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.03); }
+        
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; box-sizing: border-box; outline: none; background: #fafafa; }
+        input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; box-sizing: border-box; outline: none; background: #fafafa; }
         input:focus { border-color: var(--ios-blue); background: #fff; }
-        button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 600; font-size: 17px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.96); }
-        .history-item { background: white; padding: 20px; border-radius: 18px; margin-bottom: 12px; border: 1px solid #e5e5ea; }
+        
+        button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.97); }
+        button.secondary { background: none; color: var(--ios-blue); margin-top: 10px; }
+        
+        .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
         .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 12px; margin-top: 10px; user-select: text; -webkit-user-select: text; }
-        #loading { display: none; margin-top: 15px; font-weight: 600; color: var(--ios-blue); text-align: center; }
+        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin: 10px 0; }
     </style>
 </head>
 <body>
-    <div class="app">
+
+<div class="app-container">
+    <div id="authScreen" class="screen">
         <h1>Laporin.</h1>
+        <div class="card">
+            <label>Email Access</label>
+            <input type="email" id="email" placeholder="nama@email.com">
+            <label>Password</label>
+            <input type="password" id="pw" placeholder="Min. 8 Karakter">
+            <button onclick="handleAuth()">Sign In / Register</button>
+        </div>
+    </div>
+
+    <div id="mainScreen" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Laporin.</h1>
+            <button onclick="logout()" style="width:auto; padding:8px 15px; font-size:12px; background:#ff3b30;">Logout</button>
+        </div>
+        
         <div class="card">
             <label>Brand Reference</label>
             <input type="text" id="brand" placeholder="e.g. Honda">
             <label>Income Amount (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
-            <button id="btnSubmit" onclick="proses()">Calculate Taxes</button>
-            <div id="loading">Consulting AI...</div>
+            <button id="btnSubmit" onclick="prosesData()">Analyze with AI</button>
+            <div id="loading">AI is crunching numbers...</div>
         </div>
+
         <div id="historyList"></div>
     </div>
+</div>
 
-    <script>
-        const config = {
-            project: 'pajakpro',
-            endpoint: 'https://sgp.cloud.appwrite.io/v1',
-            db: 'databaseutama',
-            table: 'transaksi_klien',
-            groq: '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'
-        };
+<script>
+    // CONFIG SESUAI SCREENSHOT LO
+    const PROJECT_ID = 'pajakpro';
+    const ENDPOINT = 'https://sgp.cloud.appwrite.io/v1';
+    const DB_ID = 'databaseutama';
+    const TABLE_ID = 'transaksi_klien';
+    const GROQ_KEY = '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';
 
-        const client = new Appwrite.Client().setEndpoint(config.endpoint).setProject(config.project);
-        const databases = new Appwrite.Databases(client);
+    const client = new Appwrite.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID);
+    const account = new Appwrite.Account(client);
+    const databases = new Appwrite.Databases(client);
 
-        async function load() {
+    // 1. CEK SESSION
+    async function init() {
+        try {
+            await account.get();
+            showScreen('mainScreen');
+            loadHistory();
+        } catch (e) {
+            showScreen('authScreen');
+        }
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    // 2. AUTH LOGIC
+    async function handleAuth() {
+        const email = document.getElementById('email').value;
+        const pw = document.getElementById('pw').value;
+        if(!email || !pw) return alert('Isi email & password, anjing!');
+        
+        try {
+            await account.createEmailSession(email, pw);
+            location.reload();
+        } catch (e) {
             try {
-                const res = await databases.listDocuments(config.db, config.table);
-                const list = document.getElementById('historyList');
-                list.innerHTML = '<h2 style="font-size: 20px;">Recent Reports</h2>';
-                res.documents.reverse().forEach(doc => {
-                    list.innerHTML += `<div class="history-item">
+                await account.create('unique()', email, pw);
+                await account.createEmailSession(email, pw);
+                location.reload();
+            } catch (err) { alert("Error: " + err.message); }
+        }
+    }
+
+    async function logout() {
+        await account.deleteSession('current');
+        location.reload();
+    }
+
+    // 3. LOAD DATA (FILTER BY USER)
+    async function loadHistory() {
+        try {
+            const user = await account.get();
+            // FILTER: Cuma ambil data punya user ini
+            const res = await databases.listDocuments(DB_ID, TABLE_ID, [
+                Appwrite.Query.equal('user_id', user.$id)
+            ]);
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = '<h2 style="font-size:20px; margin-left:10px;">My Reports</h2>';
+            
+            res.documents.reverse().forEach(doc => {
+                list.innerHTML += `
+                    <div class="history-item">
                         <strong>${doc.nama_brand}</strong><br>
-                        <small>Rp ${doc.nominal.toLocaleString('id-ID')}</small>
+                        <span style="color:var(--ios-blue); font-weight:700;">Rp ${doc.nominal.toLocaleString('id-ID')}</span>
                         <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
                     </div>`;
-                });
-            } catch (e) { console.error(e); }
-        }
+            });
+        } catch (e) { console.error(e); }
+    }
 
-        async function proses() {
-            const b = document.getElementById('brand').value;
-            const n = document.getElementById('nominal').value;
-            if(!b || !n) return alert('Isi data!');
+    // 4. PROSES AI + SIMPAN
+    async function prosesData() {
+        const brand = document.getElementById('brand').value;
+        const nominal = document.getElementById('nominal').value;
+        if(!brand || !nominal) return alert('Isi datanya!');
+
+        document.getElementById('btnSubmit').disabled = true;
+        document.getElementById('loading').style.display = 'block';
+
+        try {
+            const user = await account.get();
             
-            document.getElementById('btnSubmit').disabled = true;
-            document.getElementById('loading').style.display = 'block';
+            // Tanya Groq
+            const aiReq = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        {role: "system", content: "Expert pajak Indonesia 2026. Hitung PPh 21/23 secara singkat & profesional."},
+                        {role: "user", content: `Hitung pajak pendapatan ${brand} senilai Rp${nominal}`}
+                    ]
+                })
+            });
+            const aiRes = await aiReq.json();
+            const hasilAI = aiRes.choices[0].message.content;
 
-            try {
-                const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${config.groq}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [{role: "system", content: "Expert pajak Indonesia 2026."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
-                    })
-                });
-                const resAi = await ai.json();
-                const hasil = resAi.choices[0].message.content;
+            // Simpan ke Appwrite
+            await databases.createDocument(DB_ID, TABLE_ID, 'unique()', {
+                nama_brand: brand,
+                nominal: parseInt(nominal),
+                analisis_pajak: hasilAI,
+                user_id: user.$id
+            });
 
-                await databases.createDocument(config.db, config.table, 'unique()', {
-                    nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: 'user_dev'
-                });
-
-                document.getElementById('brand').value = '';
-                document.getElementById('nominal').value = '';
-                load();
-            } catch (e) { alert(e.message); }
-            finally {
-                document.getElementById('btnSubmit').disabled = false;
-                document.getElementById('loading').style.display = 'none';
-            }
+            document.getElementById('brand').value = '';
+            document.getElementById('nominal').value = '';
+            loadHistory();
+        } catch (e) { alert(e.message); }
+        finally {
+            document.getElementById('btnSubmit').disabled = false;
+            document.getElementById('loading').style.display = 'none';
         }
-        load();
-        if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
-    </script>
+    }
+
+    init();
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
+</script>
 </body>
 </html>
