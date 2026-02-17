@@ -1,17 +1,11 @@
 {
   "short_name": "Laporin",
-  "name": "Laporin AI Enterprise",
+  "name": "Laporin AI SaaS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5f5f7",
   "theme_color": "#0071e3",
   "icons": [
-    {
-      "src": "https://cdn-icons-png.flaticon.com/512/5968/5968350.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/5968/5968350.png",
       "sizes": "512x512",
