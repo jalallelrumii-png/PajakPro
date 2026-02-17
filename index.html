@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Laporin AI | Enterprise</title>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968350.png">
 
     <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -16,28 +18,28 @@
     <style>
         :root { --ios-blue: #0071e3; --ios-bg: #f5f5f7; }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 450px; }
-        .screen { display: none; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--ios-bg); margin: 0; padding: 20px; display: flex; justify-content: center; overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 450px; padding-bottom: 50px; }
+        .screen { display: none; animation: slideUp 0.4s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
         h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 20px; }
-        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
         
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; }
+        input { width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; transition: 0.2s; }
+        input:focus { border-color: var(--ios-blue); background: #fff; }
         
         button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.97); }
-        .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; margin-bottom: 20px; }
+        button:active { transform: scale(0.96); opacity: 0.8; }
         
-        .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
+        .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
+        .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; position: relative; }
+        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 12px; }
         
-        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin-bottom: 10px; }
-        canvas { margin-bottom: 25px; }
-        .action-btns { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-small { padding: 10px; font-size: 12px; border-radius: 10px; background: #e5e5ea; color: #000; width: auto; }
+        #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin: 15px 0; }
+        .btn-pdf { background: var(--ios-blue); color: #fff; padding: 10px 15px; font-size: 13px; border-radius: 10px; width: auto; margin-top: 10px; }
+        canvas { max-width: 100%; height: auto !important; }
     </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
         <h1>Laporin.</h1>
         <div class="card">
             <label>Email Access</label>
-            <input type="email" id="email" placeholder="nama@email.com">
+            <input type="email" id="email" placeholder="email@contoh.com">
             <label>Password</label>
             <input type="password" id="pw" placeholder="Min. 8 Karakter">
             <button onclick="handleAuth()">Sign In / Register</button>
@@ -55,20 +57,20 @@
     </div>
 
     <div id="mainScreen" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>Laporin.</h1>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h1 style="margin:0;">Laporin.</h1>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
 
         <div class="card">
-            <label>Tax Spending Overview</label>
-            <canvas id="taxChart"></canvas>
+            <label>Income Overview (Visual)</label>
+            <canvas id="taxChart" height="200"></canvas>
         </div>
         
         <div class="card">
             <label>Brand Reference</label>
             <input type="text" id="brand" placeholder="e.g. Honda">
-            <label>Nominal Income (Rp)</label>
+            <label>Income Amount (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
             <div id="loading">✨ AI is Analyzing...</div>
             <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
@@ -79,7 +81,7 @@
 </div>
 
 <script>
-    // CONFIG
+    // KONEKSI APPWRITE & GROQ
     const sdk = new Appwrite.Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('pajakpro');
     const account = new Appwrite.Account(sdk);
     const db = new Appwrite.Databases(sdk);
@@ -101,17 +103,17 @@
     }
 
     async function handleAuth() {
-        const e = document.getElementById('email').value;
-        const p = document.getElementById('pw').value;
+        const email = document.getElementById('email').value;
+        const pw = document.getElementById('pw').value;
         try {
-            await account.createEmailSession(e, p);
+            await account.createEmailSession(email, pw);
             location.reload();
-        } catch (err) {
+        } catch (e) {
             try {
-                await account.create('unique()', e, p);
-                await account.createEmailSession(e, p);
+                await account.create('unique()', email, pw);
+                await account.createEmailSession(email, pw);
                 location.reload();
-            } catch (x) { alert(x.message); }
+            } catch (err) { alert("Gagal Login: " + err.message); }
         }
     }
 
@@ -120,27 +122,14 @@
     async function loadData() {
         try {
             const user = await account.get();
-            const res = await db.listDocuments('databaseutama', 'transaksi_klien', [Appwrite.Query.equal('user_id', user.$id)]);
+            const res = await db.listDocuments('databaseutama', 'transaksi_klien', [
+                Appwrite.Query.equal('user_id', user.$id),
+                Appwrite.Query.limit(100)
+            ]);
             
             updateChart(res.documents);
             renderHistory(res.documents);
-        } catch (e) { console.error(e); }
-    }
-
-    function renderHistory(docs) {
-        const list = document.getElementById('historyList');
-        list.innerHTML = '<h2 style="font-size:20px; margin-left:10px;">Reports History</h2>';
-        docs.reverse().forEach(doc => {
-            list.innerHTML += `
-                <div class="history-item">
-                    <strong>${doc.nama_brand}</strong><br>
-                    <span style="color:var(--ios-blue); font-weight:700;">Rp ${doc.nominal.toLocaleString('id-ID')}</span>
-                    <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
-                    <div class="action-btns">
-                        <button class="btn-small" onclick="downloadPDF('${doc.nama_brand}', ${doc.nominal}, \`${doc.analisis_pajak.replace(/`/g, "'")}\`)">📄 PDF</button>
-                    </div>
-                </div>`;
-        });
+        } catch (e) { console.error("Load Gagal:", e); }
     }
 
     function updateChart(docs) {
@@ -156,37 +145,57 @@
                 datasets: [{
                     label: 'Income (Rp)',
                     data: values,
-                    backgroundColor: '#0071e3',
-                    borderRadius: 8
+                    backgroundColor: ['#0071e3', '#34c759', '#ff9500', '#af52de', '#ff3b30'],
+                    borderRadius: 12
                 }]
             },
-            options: { plugins: { legend: { display: false } } }
+            options: { 
+                responsive: true, 
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
+            }
+        });
+    }
+
+    function renderHistory(docs) {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '<h2 style="font-size:20px; margin: 20px 0 10px 10px;">Reports History</h2>';
+        docs.reverse().forEach(doc => {
+            list.innerHTML += `
+                <div class="history-item">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>${doc.nama_brand}</strong>
+                        <span style="color:var(--ios-blue); font-weight:700;">Rp ${doc.nominal.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
+                    <button class="btn-pdf" onclick="downloadPDF('${doc.nama_brand}', ${doc.nominal}, \`${doc.analisis_pajak.replace(/`/g, "'")}\`)">📄 Download PDF</button>
+                </div>`;
         });
     }
 
     async function prosesData() {
-        const b = document.getElementById('brand').value;
-        const n = document.getElementById('nominal').value;
-        if(!b || !n) return alert('Isi data, anjing!');
+        const brand = document.getElementById('brand').value;
+        const nominal = document.getElementById('nominal').value;
+        if(!brand || !nominal) return alert('Isi dulu datanya!');
         
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('loading').style.display = 'block';
 
         try {
             const user = await account.get();
-            const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan hitungan PPh singkat & saran pajak."}, {role: "user", content: `Analisa pajak ${b} income Rp${n}`}]
+                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan hitungan PPh singkat & tips hemat pajak."}, {role: "user", content: `Analisa pajak brand ${brand} dengan income Rp${nominal}`}]
                 })
             });
-            const res = await ai.json();
-            const hasil = res.choices[0].message.content;
+            const aiData = await aiRes.json();
+            const hasil = aiData.choices[0].message.content;
 
             await db.createDocument('databaseutama', 'transaksi_klien', 'unique()', {
-                nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: user.$id
+                nama_brand: brand, nominal: parseInt(nominal), analisis_pajak: hasil, user_id: user.$id
             });
             
             document.getElementById('brand').value = '';
@@ -202,13 +211,18 @@
     function downloadPDF(brand, nominal, text) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(22); doc.text("TAX REPORT", 20, 20);
-        doc.setFontSize(12); doc.text(`Brand: ${brand}`, 20, 40);
-        doc.text(`Nominal: Rp ${nominal.toLocaleString('id-ID')}`, 20, 50);
-        doc.text("Analysis:", 20, 70);
-        const split = doc.splitTextToSize(text, 170);
-        doc.text(split, 20, 80);
-        doc.save(`Laporin_${brand}.pdf`);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(20);
+        doc.text("LAPORAN ANALISIS PAJAK AI", 20, 20);
+        doc.setFontSize(12);
+        doc.text(`Brand: ${brand}`, 20, 40);
+        doc.text(`Income: Rp ${nominal.toLocaleString('id-ID')}`, 20, 50);
+        doc.line(20, 55, 190, 55);
+        doc.text("Analisis:", 20, 65);
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(text, 170);
+        doc.text(lines, 20, 75);
+        doc.save(`Laporan_Pajak_${brand}.pdf`);
     }
 
     init();
