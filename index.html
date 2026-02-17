@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Laporin AI | Enterprise</title>
+    <title>Laporin AI | SaaS Edition</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
@@ -23,26 +23,38 @@
         .screen { display: none; animation: slideUp 0.4s ease-out; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 20px; }
+        h1 { font-size: 34px; font-weight: 800; letter-spacing: -1.5px; margin: 0; }
         .card { background: white; padding: 25px; border-radius: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid rgba(0,0,0,0.02); }
         
         label { display: block; font-size: 11px; font-weight: 700; color: #8e8e93; margin: 0 0 8px 10px; text-transform: uppercase; }
-        input { width: 100%; padding: 16px; margin-bottom: 15px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; transition: 0.2s; }
-        input:focus { border-color: var(--ios-blue); background: #fff; }
+        input { width: 100%; padding: 16px; margin-bottom: 12px; border-radius: 14px; border: 1px solid #d1d1d6; font-size: 17px; outline: none; background: #fafafa; }
         
         button { width: 100%; padding: 18px; border-radius: 16px; border: none; background: #000; color: #fff; font-weight: 700; font-size: 17px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.96); opacity: 0.8; }
+        button:active { transform: scale(0.96); }
         
         .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
-        .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; position: relative; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 12px; }
+        .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 8px; }
         
+        .history-item { background: white; padding: 20px; border-radius: 20px; margin-bottom: 15px; border: 1px solid #e5e5ea; }
+        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; margin-top: 10px; }
+        
+        #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(5px); z-index:999; }
         #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin: 15px 0; }
-        .btn-pdf { background: var(--ios-blue); color: #fff; padding: 10px 15px; font-size: 13px; border-radius: 10px; width: auto; margin-top: 10px; }
-        canvas { max-width: 100%; height: auto !important; }
+        .pdf-btn { background: var(--ios-blue); color: #fff; padding: 8px 15px; font-size: 12px; border-radius: 8px; width: auto; margin-top: 10px; }
     </style>
 </head>
 <body>
+
+<div id="modalSettings">
+    <div style="max-width:350px; margin:100px auto; background:white; padding:30px; border-radius:25px;">
+        <h3>⚙️ User API Config</h3>
+        <p style="font-size:12px; color:#666;">Gunakan API Key Groq lo sendiri biar aplikasi ini gratis selamanya.</p>
+        <label>Groq API Key</label>
+        <input type="password" id="userKeyInput" placeholder="gsk_xxxx...">
+        <button onclick="saveKey()">Simpan & Hubungkan</button>
+        <button onclick="toggleSettings()" style="background:none; color:red; margin-top:10px; font-size:14px;">Tutup</button>
+    </div>
+</div>
 
 <div class="app-container">
     <div id="authScreen" class="screen">
@@ -57,23 +69,26 @@
     </div>
 
     <div id="mainScreen" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h1 style="margin:0;">Laporin.</h1>
-            <button class="btn-logout" onclick="logout()">Logout</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1>Laporin.</h1>
+            <div>
+                <button class="btn-settings" onclick="toggleSettings()">⚙️</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
         </div>
 
         <div class="card">
-            <label>Income Overview (Visual)</label>
+            <label>Visual Laporan Terakhir</label>
             <canvas id="taxChart" height="200"></canvas>
         </div>
         
         <div class="card">
-            <label>Brand Reference</label>
-            <input type="text" id="brand" placeholder="e.g. Honda">
-            <label>Income Amount (Rp)</label>
+            <label>Nama Brand/Proyek</label>
+            <input type="text" id="brand" placeholder="e.g. Proyek A">
+            <label>Total Pendapatan (Rp)</label>
             <input type="number" id="nominal" placeholder="0">
-            <div id="loading">✨ AI is Analyzing...</div>
-            <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
+            <div id="loading">✨ AI sedang menghitung...</div>
+            <button id="btnSubmit" onclick="prosesData()">Analisa & Simpan</button>
         </div>
 
         <div id="historyList"></div>
@@ -81,20 +96,13 @@
 </div>
 
 <script>
-    // KONEKSI APPWRITE & GROQ
     const sdk = new Appwrite.Client().setEndpoint('https://sgp.cloud.appwrite.io/v1').setProject('pajakpro');
-    const account = new Appwrite.Account(sdk);
-    const db = new Appwrite.Databases(sdk);
-    const GROQ_KEY = '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';
-    
+    const account = new Appwrite.Account(sdk), db = new Appwrite.Databases(sdk);
     let myChart = null;
 
     async function init() {
-        try {
-            await account.get();
-            showScreen('mainScreen');
-            loadData();
-        } catch (e) { showScreen('authScreen'); }
+        try { await account.get(); showScreen('mainScreen'); loadData(); } 
+        catch (e) { showScreen('authScreen'); }
     }
 
     function showScreen(id) {
@@ -103,126 +111,105 @@
     }
 
     async function handleAuth() {
-        const email = document.getElementById('email').value;
-        const pw = document.getElementById('pw').value;
-        try {
-            await account.createEmailSession(email, pw);
-            location.reload();
-        } catch (e) {
-            try {
-                await account.create('unique()', email, pw);
-                await account.createEmailSession(email, pw);
-                location.reload();
-            } catch (err) { alert("Gagal Login: " + err.message); }
+        const e = document.getElementById('email').value, p = document.getElementById('pw').value;
+        try { await account.createEmailSession(e, p); location.reload(); }
+        catch (err) {
+            try { await account.create('unique()', e, p); await account.createEmailSession(e, p); location.reload(); }
+            catch (x) { alert(x.message); }
         }
     }
 
     async function logout() { await account.deleteSession('current'); location.reload(); }
+
+    function toggleSettings() {
+        const m = document.getElementById('modalSettings');
+        m.style.display = m.style.display === 'block' ? 'none' : 'block';
+        const current = localStorage.getItem('u_gkey');
+        if(current) document.getElementById('userKeyInput').value = current;
+    }
+
+    function saveKey() {
+        const val = document.getElementById('userKeyInput').value;
+        if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Key Tersimpan!'); }
+        else { alert('Key Groq tidak valid, anjing!'); }
+    }
 
     async function loadData() {
         try {
             const user = await account.get();
             const res = await db.listDocuments('databaseutama', 'transaksi_klien', [
                 Appwrite.Query.equal('user_id', user.$id),
-                Appwrite.Query.limit(100)
+                Appwrite.Query.limit(50)
             ]);
-            
-            updateChart(res.documents);
             renderHistory(res.documents);
-        } catch (e) { console.error("Load Gagal:", e); }
+            updateChart(res.documents);
+        } catch (e) { console.error(e); }
     }
 
     function updateChart(docs) {
         const ctx = document.getElementById('taxChart').getContext('2d');
-        const labels = docs.map(d => d.nama_brand).slice(-5);
-        const values = docs.map(d => d.nominal).slice(-5);
-
+        const labels = docs.slice(-5).map(d => d.nama_brand);
+        const data = docs.slice(-5).map(d => d.nominal);
         if (myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Income (Rp)',
-                    data: values,
-                    backgroundColor: ['#0071e3', '#34c759', '#ff9500', '#af52de', '#ff3b30'],
-                    borderRadius: 12
-                }]
-            },
-            options: { 
-                responsive: true, 
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } }
-            }
+            data: { labels, datasets: [{ label: 'Income', data, backgroundColor: '#0071e3', borderRadius: 8 }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { display: false } } } }
         });
     }
 
     function renderHistory(docs) {
-        const list = document.getElementById('historyList');
-        list.innerHTML = '<h2 style="font-size:20px; margin: 20px 0 10px 10px;">Reports History</h2>';
-        docs.reverse().forEach(doc => {
-            list.innerHTML += `
-                <div class="history-item">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${doc.nama_brand}</strong>
-                        <span style="color:var(--ios-blue); font-weight:700;">Rp ${doc.nominal.toLocaleString('id-ID')}</span>
-                    </div>
-                    <div class="analysis">${doc.analisis_pajak.replace(/\n/g, '<br>')}</div>
-                    <button class="btn-pdf" onclick="downloadPDF('${doc.nama_brand}', ${doc.nominal}, \`${doc.analisis_pajak.replace(/`/g, "'")}\`)">📄 Download PDF</button>
-                </div>`;
+        const h = document.getElementById('historyList');
+        h.innerHTML = '<h2>Riwayat</h2>';
+        docs.reverse().forEach(d => {
+            h.innerHTML += `<div class="history-item">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>${d.nama_brand}</strong>
+                    <span style="color:#0071e3">Rp ${d.nominal.toLocaleString()}</span>
+                </div>
+                <div class="analysis">${d.analisis_pajak.replace(/\n/g, '<br>')}</div>
+                <button class="pdf-btn" onclick="makePDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)">Unduh PDF</button>
+            </div>`;
         });
     }
 
     async function prosesData() {
-        const brand = document.getElementById('brand').value;
-        const nominal = document.getElementById('nominal').value;
-        if(!brand || !nominal) return alert('Isi dulu datanya!');
+        const key = localStorage.getItem('u_gkey');
+        if(!key) { alert('Isi API Key di Settings dulu!'); return toggleSettings(); }
         
-        document.getElementById('btnSubmit').disabled = true;
+        const b = document.getElementById('brand').value, n = document.getElementById('nominal').value;
+        if(!b || !n) return;
+        
         document.getElementById('loading').style.display = 'block';
-
         try {
             const user = await account.get();
-            const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan hitungan PPh singkat & tips hemat pajak."}, {role: "user", content: `Analisa pajak brand ${brand} dengan income Rp${nominal}`}]
+                    messages: [{role: "system", content: "Expert pajak Indonesia. Berikan rincian singkat."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
                 })
             });
-            const aiData = await aiRes.json();
-            const hasil = aiData.choices[0].message.content;
-
+            const res = await ai.json();
+            const hasil = res.choices[0].message.content;
             await db.createDocument('databaseutama', 'transaksi_klien', 'unique()', {
-                nama_brand: brand, nominal: parseInt(nominal), analisis_pajak: hasil, user_id: user.$id
+                nama_brand: b, nominal: parseInt(n), analisis_pajak: hasil, user_id: user.$id
             });
-            
-            document.getElementById('brand').value = '';
-            document.getElementById('nominal').value = '';
             loadData();
-        } catch (e) { alert(e.message); }
-        finally {
-            document.getElementById('btnSubmit').disabled = false;
-            document.getElementById('loading').style.display = 'none';
-        }
+            document.getElementById('brand').value = ''; document.getElementById('nominal').value = '';
+        } catch (e) { alert('API Error! Cek Key lo.'); }
+        finally { document.getElementById('loading').style.display = 'none'; }
     }
 
-    function downloadPDF(brand, nominal, text) {
+    function makePDF(b, n, t) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(20);
-        doc.text("LAPORAN ANALISIS PAJAK AI", 20, 20);
-        doc.setFontSize(12);
-        doc.text(`Brand: ${brand}`, 20, 40);
-        doc.text(`Income: Rp ${nominal.toLocaleString('id-ID')}`, 20, 50);
-        doc.line(20, 55, 190, 55);
-        doc.text("Analisis:", 20, 65);
-        doc.setFont("helvetica", "normal");
-        const lines = doc.splitTextToSize(text, 170);
-        doc.text(lines, 20, 75);
-        doc.save(`Laporan_Pajak_${brand}.pdf`);
+        doc.setFontSize(18); doc.text(`LAPORAN PAJAK: ${b}`, 10, 20);
+        doc.setFontSize(12); doc.text(`Nominal: Rp ${n.toLocaleString()}`, 10, 30);
+        doc.text("Analisis AI:", 10, 50);
+        doc.text(doc.splitTextToSize(t, 180), 10, 60);
+        doc.save(`Laporan_${b}.pdf`);
     }
 
     init();
