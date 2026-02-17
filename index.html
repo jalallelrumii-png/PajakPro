@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pajak Pro | Advanced AI</title>
+    <title>Pajak Pro | Auditor AI Indonesia</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,17 +26,14 @@
         button:active { transform: scale(0.97); }
         .btn-logout { background: #ff3b30; width: auto; padding: 8px 15px; font-size: 12px; border-radius: 10px; }
         .btn-settings { background: #e5e5ea; color: #000; width: auto; padding: 8px 12px; font-size: 18px; border-radius: 10px; margin-right: 8px; }
-        
-        /* Accordion & Search Styles */
         .search-container { margin-bottom: 15px; position: sticky; top: 10px; z-index: 10; }
         .history-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .history-content { display: none; padding-top: 15px; border-top: 1px solid #f2f2f7; margin-top: 15px; animation: fadeIn 0.3s ease; }
         .history-item.active .history-content { display: block; }
         .history-item.active .arrow { transform: rotate(180deg); }
         .arrow { transition: 0.3s; font-size: 12px; color: #8e8e93; }
-        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; }
+        .analysis { font-size: 14px; color: #3a3a3c; line-height: 1.6; background: #f2f2f7; padding: 15px; border-radius: 14px; white-space: pre-wrap; }
         .btn-delete { background: none; color: #ff3b30; width: auto; padding: 8px; font-size: 13px; font-weight: 500; }
-        
         #modalSettings { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); z-index:999; }
         #loading { display: none; text-align: center; color: var(--ios-blue); font-weight: 600; margin-bottom: 10px; }
     </style>
@@ -45,7 +42,8 @@
 
 <div id="modalSettings">
     <div style="max-width:350px; margin:100px auto; background:white; padding:30px; border-radius:25px; text-align:center;">
-        <h3 style="margin-top:0;">⚙️ Config API Groq</h3>
+        <h3 style="margin-top:0;">⚙️ Config Groq AI</h3>
+        <p style="font-size:12px; color:#666;">Gunakan API Key Groq Anda (gsk_...)</p>
         <input type="password" id="u_key" placeholder="gsk_xxxx...">
         <button onclick="saveKey()">Simpan Konfigurasi</button>
         <button onclick="toggleSettings()" style="background:none; color:#8e8e93; margin-top:10px; font-size:14px;">Tutup</button>
@@ -76,15 +74,15 @@
         <div class="card"><canvas id="taxChart" height="180"></canvas></div>
 
         <div class="card">
-            <label>Input Transaksi Baru</label>
-            <input type="text" id="brand" placeholder="Nama Proyek (ex: Honda Jazz)">
-            <input type="number" id="nominal" placeholder="Nominal Income (Rp)">
-            <div id="loading">✨ AI sedang berhitung...</div>
-            <button id="btnSubmit" onclick="prosesData()">Analyze & Save</button>
+            <label>Data Transaksi</label>
+            <input type="text" id="brand" placeholder="Nama Proyek / Brand">
+            <input type="number" id="nominal" placeholder="Nominal Pendapatan (Rp)">
+            <div id="loading">✨ Sedang Menghitung Pajak Indonesia...</div>
+            <button id="btnSubmit" onclick="prosesData()">Analisa Pajak (UU HPP)</button>
         </div>
 
         <div class="search-container">
-            <input type="text" id="searchInput" placeholder="🔍 Cari riwayat proyek..." onkeyup="filterHistory()">
+            <input type="text" id="searchInput" placeholder="🔍 Cari riwayat laporan..." onkeyup="filterHistory()">
         </div>
 
         <div id="historyList"></div>
@@ -111,13 +109,13 @@
         try { await account.createEmailSession(e, p); location.reload(); }
         catch (err) {
             try { await account.create('unique()', e, p); await account.createEmailSession(e, p); location.reload(); }
-            catch (x) { alert("Gagal: " + x.message); }
+            catch (x) { alert("Error: " + x.message); }
         }
     }
 
     async function logout() { await account.deleteSession('current'); location.reload(); }
     function toggleSettings() { const m = document.getElementById('modalSettings'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-    function saveKey() { const val = document.getElementById('u_key').value; if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('API Key Aman!'); } else { alert('Key Tidak Valid!'); } }
+    function saveKey() { const val = document.getElementById('u_key').value; if(val.startsWith('gsk_')) { localStorage.setItem('u_gkey', val); toggleSettings(); alert('Berhasil!'); } else { alert('Key Salah!'); } }
 
     async function loadData() {
         try {
@@ -136,7 +134,7 @@
             type: 'bar',
             data: {
                 labels: docs.slice(-5).map(d => d.nama_brand),
-                datasets: [{ label: 'Income', data: docs.slice(-5).map(d => d.nominal), backgroundColor: '#0071e3', borderRadius: 8 }]
+                datasets: [{ label: 'Omzet', data: docs.slice(-5).map(d => d.nominal), backgroundColor: '#0071e3', borderRadius: 8 }]
             },
             options: { plugins: { legend: { display: false } } }
         });
@@ -157,7 +155,7 @@
                     <span class="arrow">▼</span>
                 </div>
                 <div class="history-content">
-                    <div class="analysis">${d.analisis_pajak.replace(/\n/g, '<br>')}</div>
+                    <div class="analysis">${d.analisis_pajak}</div>
                     <div style="display:flex; gap:10px; margin-top:15px;">
                         <button onclick="downloadPDF('${d.nama_brand}', ${d.nominal}, \`${d.analisis_pajak.replace(/`/g, "'")}\`)" style="flex:1; background:#e5e5ea; color:#000; padding:10px; font-size:13px;">📄 PDF</button>
                         <button class="btn-delete" onclick="hapusData('${d.$id}')">🗑️ Hapus</button>
@@ -175,16 +173,13 @@
     }
 
     async function hapusData(id) {
-        if(!confirm('Hapus data ini selamanya?')) return;
-        try {
-            await db.deleteDocument('databaseutama', 'transaksi_klien', id);
-            loadData();
-        } catch (e) { alert(e.message); }
+        if(!confirm('Hapus data laporan ini?')) return;
+        try { await db.deleteDocument('databaseutama', 'transaksi_klien', id); loadData(); } catch (e) { alert(e.message); }
     }
 
     async function prosesData() {
         const key = localStorage.getItem('u_gkey');
-        if(!key) { alert('Input API Key dulu!'); return toggleSettings(); }
+        if(!key) { alert('Isi API Key di Settings ⚙️!'); return toggleSettings(); }
         const b = document.getElementById('brand').value, n = document.getElementById('nominal').value;
         if(!b || !n) return;
         document.getElementById('loading').style.display = 'block';
@@ -195,7 +190,11 @@
                 headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{role: "system", content: "Expert pajak Indonesia. Ringkas dan akurat."}, {role: "user", content: `Pajak ${b} Rp${n}`}]
+                    messages: [
+                        {role: "system", content: "Anda adalah konsultan pajak senior Indonesia. Hitung pajak berdasarkan UU HPP. Jelaskan rincian PPh 21 (progresif) dan PPN 11% secara detail namun ringkas."},
+                        {role: "user", content: `Hitung pajak proyek ${b} dengan nilai Rp ${n}`}
+                    ],
+                    temperature: 0.2
                 })
             });
             const res = await ai.json();
@@ -205,17 +204,17 @@
             });
             document.getElementById('brand').value = ''; document.getElementById('nominal').value = '';
             loadData();
-        } catch (e) { alert('API Error!'); }
+        } catch (e) { alert('Error!'); }
         finally { document.getElementById('loading').style.display = 'none'; }
     }
 
     function downloadPDF(b, n, t) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
-        doc.setFontSize(18); doc.text(`PAJAK PRO: ${b.toUpperCase()}`, 10, 20);
-        doc.setFontSize(12); doc.text(`Income: Rp ${n.toLocaleString()}`, 10, 30);
+        doc.setFontSize(18); doc.text(`PAJAK PRO REPORT: ${b}`, 10, 20);
+        doc.setFontSize(12); doc.text(`Total Omzet: Rp ${n.toLocaleString()}`, 10, 30);
         doc.text(doc.splitTextToSize(t, 180), 10, 50);
-        doc.save(`${b}.pdf`);
+        doc.save(`Laporan_${b}.pdf`);
     }
 
     init();
